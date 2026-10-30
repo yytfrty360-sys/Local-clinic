@@ -1,0 +1,1500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clinic Queue & OPD Management System</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        clinic: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                            800: '#065f46',
+                            900: '#064e3b',
+                            dark: '#0f172a'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .tv-glow {
+            box-shadow: 0 0 50px rgba(16, 185, 129, 0.25);
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+        }
+        .print-only { display: none; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col selection:bg-clinic-500 selection:text-white">
+
+    <!-- TOP NAVIGATION & ROLE SWITCHER HEADER -->
+    <header class="bg-slate-900 text-white sticky top-0 z-50 shadow-md no-print">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Brand Logo -->
+                <div class="flex items-center space-x-3 cursor-pointer" onclick="switchRole('mareez', 1)">
+                    <div class="w-10 h-10 rounded-xl bg-clinic-500 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-clinic-500/30">
+                        <i class="fa-solid fa-stethoscope"></i>
+                    </div>
+                    <div>
+                        <span class="font-extrabold text-lg tracking-tight text-white block leading-none">Aapka Clinic</span>
+                        <span class="text-[10px] text-clinic-500 font-semibold uppercase tracking-wider">Smart Queue System</span>
+                    </div>
+                </div>
+
+                <!-- Role Switcher Tabs (Desktop) -->
+                <nav class="hidden md:flex space-x-1 bg-slate-800/80 p-1 rounded-xl border border-slate-700">
+                    <button onclick="switchRole('mareez', 1)" id="nav-btn-mareez" class="role-nav-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 text-slate-300 hover:text-white flex items-center gap-1.5">
+                        <i class="fa-solid fa-user"></i> Mareez
+                    </button>
+                    <button onclick="switchRole('reception', 4)" id="nav-btn-reception" class="role-nav-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 text-slate-300 hover:text-white flex items-center gap-1.5">
+                        <i class="fa-solid fa-clipboard-user"></i> Reception
+                    </button>
+                    <button onclick="switchRole('doctor', 7)" id="nav-btn-doctor" class="role-nav-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 text-slate-300 hover:text-white flex items-center gap-1.5">
+                        <i class="fa-solid fa-user-md"></i> Doctor
+                    </button>
+                    <button onclick="switchRole('tv', 9)" id="nav-btn-tv" class="role-nav-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 text-slate-300 hover:text-white flex items-center gap-1.5">
+                        <i class="fa-solid fa-tv"></i> Waiting Room TV
+                    </button>
+                    <button onclick="switchRole('malik', 10)" id="nav-btn-malik" class="role-nav-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 text-slate-300 hover:text-white flex items-center gap-1.5">
+                        <i class="fa-solid fa-chart-pie"></i> Malik
+                    </button>
+                    <button onclick="switchRole('login', 12)" id="nav-btn-login" class="role-nav-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 text-slate-300 hover:text-white flex items-center gap-1.5">
+                        <i class="fa-solid fa-right-to-bracket"></i> Login
+                    </button>
+                </nav>
+
+                <!-- Status indicator -->
+                <div class="hidden lg:flex items-center gap-2 bg-slate-800 px-3 py-1.5 rounded-full text-xs text-slate-300">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span>Live Queue Sync</span>
+                </div>
+
+                <!-- Mobile Menu Button -->
+                <div class="md:hidden flex items-center">
+                    <button onclick="toggleMobileMenu()" class="text-slate-300 hover:text-white focus:outline-none p-2">
+                        <i class="fa-solid fa-bars text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Navigation Menu -->
+        <div id="mobile-menu" class="hidden md:hidden bg-slate-800 border-b border-slate-700 px-4 pt-2 pb-4 space-y-1">
+            <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-2 py-1">Select Role View:</div>
+            <button onclick="switchRole('mareez', 1); toggleMobileMenu();" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-slate-200 hover:bg-slate-700 flex items-center gap-2">
+                <i class="fa-solid fa-user w-5 text-clinic-500"></i> Mareez (Patient)
+            </button>
+            <button onclick="switchRole('reception', 4); toggleMobileMenu();" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-slate-200 hover:bg-slate-700 flex items-center gap-2">
+                <i class="fa-solid fa-clipboard-user w-5 text-clinic-500"></i> Reception
+            </button>
+            <button onclick="switchRole('doctor', 7); toggleMobileMenu();" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-slate-200 hover:bg-slate-700 flex items-center gap-2">
+                <i class="fa-solid fa-user-md w-5 text-clinic-500"></i> Doctor Panel
+            </button>
+            <button onclick="switchRole('tv', 9); toggleMobileMenu();" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-slate-200 hover:bg-slate-700 flex items-center gap-2">
+                <i class="fa-solid fa-tv w-5 text-clinic-500"></i> Waiting Room TV
+            </button>
+            <button onclick="switchRole('malik', 10); toggleMobileMenu();" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-slate-200 hover:bg-slate-700 flex items-center gap-2">
+                <i class="fa-solid fa-chart-pie w-5 text-clinic-500"></i> Malik (Owner Analytics)
+            </button>
+            <button onclick="switchRole('login', 12); toggleMobileMenu();" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-slate-200 hover:bg-slate-700 flex items-center gap-2">
+                <i class="fa-solid fa-right-to-bracket w-5 text-clinic-500"></i> Staff Login
+            </button>
+        </div>
+    </header>
+
+    <!-- SECONDARY SUB-NAVIGATION BAR (SCREEN SELECTOR) -->
+    <div class="bg-white border-b border-slate-200 py-2.5 px-4 shadow-sm no-print">
+        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-2 text-xs font-semibold text-slate-500" id="current-role-indicator">
+                <span class="bg-clinic-100 text-clinic-800 px-2.5 py-0.5 rounded-full uppercase tracking-wider text-[10px]">Active Role</span>
+                <span id="role-title" class="text-slate-800 font-bold text-sm">Mareez</span>
+            </div>
+
+            <!-- Screen Quick Switch Tabs for current role -->
+            <div id="subnav-screens" class="flex flex-wrap items-center gap-1.5 overflow-x-auto py-1">
+                <!-- Dynamically injected screens -->
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT CONTAINER FOR ALL 12 SCREENS -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+
+        <!-- ==========================================
+             MAREEZ ROLE (SCREENS 1, 2, 3)
+        =========================================== -->
+
+        <!-- SCREEN 1: TOKEN BOOKING -->
+        <section id="screen-1" class="screen-view hidden max-w-lg mx-auto">
+            <div class="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden">
+                <div class="bg-gradient-to-r from-clinic-600 to-emerald-600 p-6 text-white text-center">
+                    <span class="text-xs uppercase tracking-widest text-emerald-100 font-bold">Screen 1/12 • Mareez</span>
+                    <h2 class="text-2xl font-extrabold mt-1">Book Your Online Token</h2>
+                    <p class="text-emerald-100 text-xs mt-1">Ghar baithe token lein, clinic mein intezaar kam karein</p>
+                </div>
+
+                <form onsubmit="handleTokenBooking(event)" class="p-6 space-y-5">
+                    <!-- Clinic Info Banner -->
+                    <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3.5 flex items-center gap-3">
+                        <i class="fa-solid fa-clinic-medical text-clinic-600 text-2xl"></i>
+                        <div>
+                            <p class="text-xs font-bold text-slate-800" id="b-clinic-name">Aapka Health Clinic</p>
+                            <p class="text-[11px] text-slate-500" id="b-opd-timings">OPD Timings: 10:00 AM - 02:00 PM | 05:00 PM - 09:00 PM</p>
+                        </div>
+                    </div>
+
+                    <!-- OPD / Doctor Selection -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Doctor / Department</label>
+                        <select id="book-doctor" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-clinic-500 font-medium text-slate-800">
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+
+                    <!-- Day Selection -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Din Chunno (Select Date)</label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <label class="cursor-pointer">
+                                <input type="radio" name="booking-day" value="Aaj" checked class="peer sr-only">
+                                <div class="border border-slate-200 peer-checked:border-clinic-500 peer-checked:bg-clinic-50 peer-checked:text-clinic-700 rounded-xl p-3 text-center transition-all">
+                                    <p class="font-bold text-sm">Aaj (Today)</p>
+                                    <p class="text-[11px] text-slate-500 peer-checked:text-clinic-600" id="lbl-today-date"></p>
+                                </div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="booking-day" value="Kal" class="peer sr-only">
+                                <div class="border border-slate-200 peer-checked:border-clinic-500 peer-checked:bg-clinic-50 peer-checked:text-clinic-700 rounded-xl p-3 text-center transition-all">
+                                    <p class="font-bold text-sm">Kal (Tomorrow)</p>
+                                    <p class="text-[11px] text-slate-500 peer-checked:text-clinic-600" id="lbl-tomorrow-date"></p>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Patient Name -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Mareez Ka Naam (Patient Name)</label>
+                        <input type="text" id="book-name" required placeholder="e.g. Rahul Sharma" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-clinic-500 font-medium">
+                    </div>
+
+                    <!-- Phone Number -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Phone Number</label>
+                        <div class="flex">
+                            <span class="inline-flex items-center px-3 rounded-l-xl border border-r-0 border-slate-200 bg-slate-100 text-slate-500 text-sm font-semibold">+91</span>
+                            <input type="tel" id="book-phone" required pattern="[0-9]{10}" maxlength="10" placeholder="9876543210" class="w-full bg-slate-50 border border-slate-200 rounded-r-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-clinic-500 font-medium">
+                        </div>
+                    </div>
+
+                    <!-- Live Token Capacity Warning -->
+                    <div id="booking-capacity-box" class="bg-slate-100 rounded-xl p-3 text-center text-xs text-slate-600 font-medium">
+                        Daily Limit status: <span id="capacity-count" class="font-bold text-slate-800">18 / 60</span> booked today
+                    </div>
+
+                    <button type="submit" id="btn-submit-booking" class="w-full bg-clinic-600 hover:bg-clinic-700 text-white font-bold py-3.5 px-6 rounded-xl shadow-lg shadow-clinic-500/20 transition-all text-sm uppercase tracking-wider flex items-center justify-center gap-2">
+                        <span>TOKEN LO</span> <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+
+                    <div class="pt-2 text-center">
+                        <button type="button" onclick="copyClinicShareLink()" class="text-xs text-clinic-600 hover:text-clinic-800 font-bold inline-flex items-center gap-1.5">
+                            <i class="fa-solid fa-share-nodes"></i> Share Booking Link via WhatsApp
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- SCREEN 2: TOKEN CONFIRM -->
+        <section id="screen-2" class="screen-view hidden max-w-lg mx-auto">
+            <div class="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden">
+                <div class="bg-emerald-500 p-6 text-white text-center">
+                    <div class="w-12 h-12 bg-white text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-2 text-2xl shadow">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                    <span class="text-xs uppercase tracking-widest text-emerald-100 font-bold">Screen 2/12 • Mareez</span>
+                    <h2 class="text-2xl font-extrabold">Token Confirm Ho Gaya!</h2>
+                </div>
+
+                <div class="p-6 text-center space-y-6">
+                    <div>
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Aapka Token Number</p>
+                        <div class="text-6xl font-extrabold text-clinic-600 my-2 tracking-tight" id="confirm-token-no">#18</div>
+                        <p class="text-sm font-semibold text-slate-700" id="confirm-patient-name">Mareez: Rahul Sharma</p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100 text-left">
+                        <div>
+                            <span class="text-[11px] text-slate-400 font-bold uppercase block">Andaazan Time</span>
+                            <span class="text-sm font-extrabold text-slate-800" id="confirm-est-time">11:40 AM</span>
+                        </div>
+                        <div>
+                            <span class="text-[11px] text-slate-400 font-bold uppercase block">Doctor</span>
+                            <span class="text-sm font-extrabold text-slate-800" id="confirm-doctor">Dr. Mehta</span>
+                        </div>
+                    </div>
+
+                    <!-- Mock Confirmation Banner -->
+                    <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-left flex items-start gap-3">
+                        <i class="fa-brands fa-whatsapp text-emerald-600 text-2xl mt-0.5"></i>
+                        <div>
+                            <p class="text-xs font-bold text-emerald-900">SMS / WhatsApp Message Sent!</p>
+                            <p class="text-[11px] text-emerald-700">Token confirmation and live tracking link sent to phone number.</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2 pt-2">
+                        <button onclick="goToLiveQueueScreen()" class="w-full bg-clinic-600 hover:bg-clinic-700 text-white font-bold py-3.5 px-6 rounded-xl shadow-lg shadow-clinic-500/20 transition-all text-sm uppercase tracking-wider flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-eye"></i> Live Queue Dekhein
+                        </button>
+                        <button onclick="cancelMyToken()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-2.5 px-4 rounded-xl text-xs transition-all">
+                            Cancel Token
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SCREEN 3: LIVE QUEUE -->
+        <section id="screen-3" class="screen-view hidden max-w-lg mx-auto">
+            <div class="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden">
+                <div class="bg-slate-900 p-6 text-white flex items-center justify-between">
+                    <div>
+                        <span class="text-[10px] uppercase tracking-widest text-clinic-400 font-bold block">Screen 3/12 • Mareez</span>
+                        <h2 class="text-xl font-bold">Live Queue Status</h2>
+                    </div>
+                    <div class="flex items-center gap-1.5 bg-slate-800 px-3 py-1 rounded-full text-xs text-emerald-400 font-semibold border border-slate-700">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                        <span>Auto-Refresh (10s)</span>
+                    </div>
+                </div>
+
+                <div class="p-6 space-y-6">
+                    <!-- Currently Serving Box -->
+                    <div class="bg-gradient-to-br from-emerald-500 to-clinic-700 rounded-2xl p-6 text-white text-center shadow-lg relative overflow-hidden">
+                        <div class="absolute -right-6 -bottom-6 opacity-10 text-9xl font-extrabold">Q</div>
+                        <span class="text-xs uppercase tracking-widest font-bold text-emerald-100">Abhi Chal Raha Hai (Currently Serving)</span>
+                        <div class="text-6xl font-extrabold my-2 tracking-tight" id="live-current-token">#12</div>
+                        <p class="text-xs text-emerald-100 font-medium" id="live-current-patient">Patient: Sunita Verma</p>
+                    </div>
+
+                    <!-- Patient's Personal Status Card -->
+                    <div class="border-2 border-dashed border-clinic-500 bg-clinic-50/50 rounded-2xl p-5 text-center">
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Aapka Token Number</p>
+                        <p class="text-3xl font-extrabold text-clinic-700 my-1" id="live-user-token">#18</p>
+
+                        <div class="grid grid-cols-2 gap-3 mt-4 text-left pt-3 border-t border-slate-200/60">
+                            <div class="bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase block">Kitne Log Aage Hain</span>
+                                <span class="text-lg font-extrabold text-slate-800" id="live-ahead-count">6 Log</span>
+                            </div>
+                            <div class="bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase block">Andaazan Waiting Time</span>
+                                <span class="text-lg font-extrabold text-clinic-600" id="live-wait-time">~30 Min</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Reminder Toggle -->
+                    <div class="flex items-center justify-between p-3.5 bg-slate-50 rounded-xl border border-slate-200">
+                        <div class="flex items-center gap-2.5">
+                            <i class="fa-solid fa-bell text-clinic-600 text-lg"></i>
+                            <div>
+                                <p class="text-xs font-bold text-slate-800">Turn On Arrival Reminder</p>
+                                <p class="text-[10px] text-slate-500">Baari aane se 2 number pehle alert mil jayega</p>
+                            </div>
+                        </div>
+                        <input type="checkbox" checked class="w-5 h-5 accent-clinic-600 rounded cursor-pointer">
+                    </div>
+
+                    <div class="text-center">
+                        <p class="text-xs text-slate-400 italic">Page auto-updates every 10 seconds</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ==========================================
+             RECEPTION ROLE (SCREENS 4, 5, 6)
+        =========================================== -->
+
+        <!-- SCREEN 4: AAJ KI LIST -->
+        <section id="screen-4" class="screen-view hidden space-y-6">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                <div>
+                    <span class="text-xs uppercase tracking-widest text-clinic-600 font-bold">Screen 4/12 • Reception</span>
+                    <h2 class="text-2xl font-extrabold text-slate-800">Aaj Ki Token List</h2>
+                    <p class="text-xs text-slate-500 mt-0.5">Manage live daily queue & mark arrivals</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-3">
+                    <span class="bg-emerald-100 text-emerald-800 font-bold text-xs px-3 py-1.5 rounded-xl border border-emerald-200" id="today-total-badge">
+                        AAJ: 54 MAREEZ
+                    </span>
+                    <button onclick="switchRole('reception', 5)" class="bg-clinic-600 hover:bg-clinic-700 text-white font-bold px-4 py-2 rounded-xl text-xs transition-all flex items-center gap-1.5">
+                        <i class="fa-solid fa-plus"></i> Walk-in Token
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filters and Search Bar -->
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div class="relative md:col-span-2">
+                    <i class="fa-solid fa-search absolute left-3.5 top-3.5 text-slate-400 text-sm"></i>
+                    <input type="text" id="rec-search-input" onkeyup="filterTodayList()" placeholder="Naam ya phone number se search karein..." class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-clinic-500">
+                </div>
+                <div>
+                    <select id="rec-doctor-filter" onchange="filterTodayList()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-clinic-500 font-medium">
+                        <option value="ALL">All Doctors</option>
+                        <!-- Filter Options Injected -->
+                    </select>
+                </div>
+            </div>
+
+            <!-- Tokens Table -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                                <th class="p-4">Token</th>
+                                <th class="p-4">Mareez Ka Naam</th>
+                                <th class="p-4">Doctor / OPD</th>
+                                <th class="p-4">Type</th>
+                                <th class="p-4">Status</th>
+                                <th class="p-4 text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="today-list-tbody" class="divide-y divide-slate-100 text-sm font-medium">
+                            <!-- Injected Dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- SCREEN 5: WALK-IN ENTRY -->
+        <section id="screen-5" class="screen-view hidden max-w-lg mx-auto">
+            <div class="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden">
+                <div class="bg-slate-800 p-6 text-white flex justify-between items-center">
+                    <div>
+                        <span class="text-[10px] uppercase tracking-widest text-clinic-400 font-bold block">Screen 5/12 • Reception</span>
+                        <h2 class="text-xl font-extrabold">Walk-in Patient Entry</h2>
+                    </div>
+                    <i class="fa-solid fa-person-walking-luggage text-2xl text-clinic-400"></i>
+                </div>
+
+                <form onsubmit="handleWalkInEntry(event)" class="p-6 space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Mareez Ka Naam</label>
+                        <input type="text" id="walkin-name" required placeholder="Full Name" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-clinic-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Phone Number</label>
+                        <div class="flex">
+                            <span class="inline-flex items-center px-3 rounded-l-xl border border-r-0 border-slate-200 bg-slate-100 text-slate-500 text-sm font-semibold">+91</span>
+                            <input type="tel" id="walkin-phone" required pattern="[0-9]{10}" maxlength="10" placeholder="10-digit number" class="w-full bg-slate-50 border border-slate-200 rounded-r-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-clinic-500">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Select Doctor</label>
+                        <select id="walkin-doctor" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-clinic-500 font-medium">
+                            <!-- Populated -->
+                        </select>
+                    </div>
+
+                    <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-200 flex items-center justify-between">
+                        <div>
+                            <span class="text-xs text-emerald-800 font-bold block">Next Auto Token #</span>
+                            <span class="text-2xl font-black text-clinic-700" id="walkin-next-num">#19</span>
+                        </div>
+                        <div class="space-y-1 text-right">
+                            <label class="inline-flex items-center gap-1.5 text-xs text-slate-700 cursor-pointer">
+                                <input type="checkbox" id="walkin-opt-print" checked class="accent-clinic-600"> Print Slip
+                            </label>
+                            <br>
+                            <label class="inline-flex items-center gap-1.5 text-xs text-slate-700 cursor-pointer">
+                                <input type="checkbox" id="walkin-opt-sms" checked class="accent-clinic-600"> Send SMS
+                            </label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full bg-clinic-600 hover:bg-clinic-700 text-white font-bold py-3.5 px-6 rounded-xl shadow-lg shadow-clinic-500/20 transition-all text-sm uppercase tracking-wider">
+                        TOKEN BANAO
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- SCREEN 6: PATIENT SEARCH -->
+        <section id="screen-6" class="screen-view hidden space-y-6">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <span class="text-xs uppercase tracking-widest text-clinic-600 font-bold">Screen 6/12 • Reception</span>
+                    <h2 class="text-2xl font-extrabold text-slate-800">Patient Search & Profile</h2>
+                    <p class="text-xs text-slate-500 mt-0.5">Purani file dhoondhne ki zaroorat nahi — search by name or phone</p>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+                <div class="relative max-w-xl">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400 text-sm"></i>
+                    <input type="text" id="patient-search-query" onkeyup="searchPatientRecords()" placeholder="Type phone number or patient name..." class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-clinic-500 font-medium">
+                </div>
+            </div>
+
+            <!-- Search Results Container -->
+            <div id="patient-search-results" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Search cards injected dynamically -->
+            </div>
+        </section>
+
+
+        <!-- ==========================================
+             DOCTOR ROLE (SCREENS 7, 8)
+        =========================================== -->
+
+        <!-- SCREEN 7: NEXT PATIENT (DOCTOR PANEL) -->
+        <section id="screen-7" class="screen-view hidden space-y-6">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <span class="text-xs uppercase tracking-widest text-clinic-600 font-bold">Screen 7/12 • Doctor Panel</span>
+                    <h2 class="text-2xl font-extrabold text-slate-800">Queue Control Console</h2>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs text-slate-500 font-bold">Active Doctor:</span>
+                    <span class="bg-slate-800 text-white font-bold text-xs px-3 py-1.5 rounded-xl" id="doc-active-title">Dr. Mehta (General OPD)</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Main Control Box -->
+                <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 text-center space-y-6">
+                    <div class="bg-slate-50 rounded-2xl p-6 border border-slate-100">
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">ABHI WALA MAREEZ (CURRENTLY IN CABIN)</span>
+                        <div class="text-7xl font-black text-clinic-600 my-3 tracking-tight" id="doc-current-token">#12</div>
+                        <h3 class="text-2xl font-extrabold text-slate-800" id="doc-current-name">Mareez A (Rahul Sharma)</h3>
+                        <p class="text-xs font-semibold text-clinic-600 mt-1" id="doc-current-visit-meta">3rd Visit • History Available</p>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <button onclick="doctorCallNext()" class="sm:col-span-3 bg-clinic-600 hover:bg-clinic-700 text-white font-black py-4 px-6 rounded-2xl shadow-xl shadow-clinic-500/20 transition-all text-lg uppercase tracking-wider flex items-center justify-center gap-3">
+                            <i class="fa-solid fa-circle-right text-xl"></i> NEXT PATIENT BULAO
+                        </button>
+                        <button onclick="doctorAction('hold')" class="bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 px-4 rounded-xl text-xs transition-all flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-pause"></i> Hold Patient
+                        </button>
+                        <button onclick="doctorAction('skip')" class="bg-slate-700 hover:bg-slate-800 text-white font-bold py-3 px-4 rounded-xl text-xs transition-all flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-forward"></i> Skip / Absent
+                        </button>
+                        <button onclick="switchRole('doctor', 8)" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl text-xs transition-all flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-file-medical"></i> Write Notes / Rx
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Upcoming Next 3 Queue -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between">
+                    <div>
+                        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">AGLE 3 MAREEZ (UPCOMING)</h4>
+                        <div id="doc-upcoming-list" class="space-y-3">
+                            <!-- Injected dynamically -->
+                        </div>
+                    </div>
+                    <div class="pt-4 border-t border-slate-100 text-center">
+                        <p class="text-xs text-slate-400">Total remaining in waiting room: <span id="doc-waiting-count" class="font-bold text-slate-700">8</span></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SCREEN 8: PATIENT HISTORY -->
+        <section id="screen-8" class="screen-view hidden space-y-6">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <span class="text-xs uppercase tracking-widest text-clinic-600 font-bold">Screen 8/12 • Doctor Panel</span>
+                    <h2 class="text-2xl font-extrabold text-slate-800">Patient History & Rx Notes</h2>
+                    <p class="text-xs text-slate-500 mt-0.5">Purani visits timeline, symptoms, and instant prescription writer</p>
+                </div>
+                <button onclick="switchRole('doctor', 7)" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2 rounded-xl text-xs transition-all">
+                    &larr; Back to Next Console
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Patient Info & Add Note Form -->
+                <div class="lg:col-span-1 space-y-6">
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 rounded-full bg-clinic-100 text-clinic-700 flex items-center justify-center font-bold text-lg">
+                                <i class="fa-solid fa-user text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-slate-800 text-base" id="rx-patient-name">Rahul Sharma</h3>
+                                <p class="text-xs text-slate-500" id="rx-patient-phone">+91 9876543210 • Age: 34</p>
+                            </div>
+                        </div>
+                        <div class="text-xs text-slate-600 pt-2 border-t border-slate-100">
+                            Total Visits: <span class="font-bold text-slate-800" id="rx-total-visits">3</span>
+                        </div>
+                    </div>
+
+                    <!-- Add New Visit Form -->
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+                        <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Aaj Ki Visit Note & Prescription</h4>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-500 mb-1">Diagnosis / Illness</label>
+                            <input type="text" id="new-rx-diag" placeholder="e.g. Fever & Cough" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-clinic-500">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-500 mb-1">Medicines / Advice</label>
+                            <textarea id="new-rx-meds" rows="4" placeholder="1. Paracetamol 650mg - 3 days&#10;2. Rest & Hydration" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs focus:outline-none focus:ring-2 focus:ring-clinic-500 font-mono"></textarea>
+                        </div>
+                        <button onclick="savePatientVisitNote()" class="w-full bg-clinic-600 hover:bg-clinic-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs uppercase tracking-wider transition-all">
+                            Save Visit Record
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Timeline of Past Visits -->
+                <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-6">VISIT HISTORY TIMELINE</h4>
+                    <div id="rx-history-timeline" class="space-y-6 relative border-l-2 border-slate-100 pl-6 ml-2">
+                        <!-- Timeline items injected -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ==========================================
+             WAITING ROOM ROLE (SCREEN 9)
+        =========================================== -->
+
+        <!-- SCREEN 9: TV DISPLAY SCREEN -->
+        <section id="screen-9" class="screen-view hidden min-h-[80vh] flex flex-col justify-between bg-slate-900 rounded-3xl p-6 sm:p-10 text-white tv-glow border border-slate-800">
+            <!-- Header -->
+            <div class="flex items-center justify-between border-b border-slate-800 pb-6">
+                <div>
+                    <span class="text-xs uppercase tracking-widest text-clinic-400 font-bold block">Screen 9/12 • Waiting Room TV Display</span>
+                    <h1 class="text-3xl sm:text-4xl font-black tracking-tight" id="tv-clinic-name">AAPKA HEALTH CLINIC</h1>
+                    <p class="text-xs text-slate-400 mt-1">General OPD Queue Monitor</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button onclick="playTVChimeAnnouncement()" class="bg-clinic-500 hover:bg-clinic-600 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 shadow-lg transition-all">
+                        <i class="fa-solid fa-volume-high"></i> Voice Call
+                    </button>
+                    <span class="text-xs font-bold bg-slate-800 px-3 py-2 rounded-xl text-emerald-400 border border-slate-700" id="tv-clock">11:40 AM</span>
+                </div>
+            </div>
+
+            <!-- Main TV Display Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 my-8 items-center">
+                <!-- Currently Serving (Huge Display) -->
+                <div class="lg:col-span-2 bg-gradient-to-br from-emerald-600 to-clinic-800 rounded-3xl p-8 sm:p-12 text-center shadow-2xl border border-emerald-500/30 relative overflow-hidden">
+                    <div class="text-xs sm:text-sm font-extrabold uppercase tracking-widest text-emerald-200">ABHI CHAL RAHA HAI</div>
+                    <div class="text-8xl sm:text-9xl font-black my-4 tracking-tight drop-shadow-lg" id="tv-current-token">#12</div>
+                    <div class="text-xl sm:text-2xl font-bold text-emerald-100" id="tv-current-patient">Mareez: Sunita Verma</div>
+                </div>
+
+                <!-- Next Upcoming Tokens List -->
+                <div class="bg-slate-800/80 rounded-3xl p-6 border border-slate-700/80">
+                    <h3 class="text-xs font-extrabold text-slate-400 uppercase tracking-widest mb-4">AGLE NUMBER (NEXT)</h3>
+                    <div id="tv-next-list" class="space-y-3">
+                        <!-- Next tokens cards -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer marquee message -->
+            <div class="bg-slate-800/50 rounded-xl p-3 border border-slate-800 text-center text-xs text-slate-400 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-circle-info text-clinic-400"></i>
+                <span>Kripya apna token number aane par hi andar jayein. Mobile pe live update chal raha hai.</span>
+            </div>
+        </section>
+
+
+        <!-- ==========================================
+             MALIK ROLE (SCREENS 10, 11)
+        =========================================== -->
+
+        <!-- SCREEN 10: ROZ KI REPORT -->
+        <section id="screen-10" class="screen-view hidden space-y-6">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <span class="text-xs uppercase tracking-widest text-clinic-600 font-bold">Screen 10/12 • Malik Dashboard</span>
+                    <h2 class="text-2xl font-extrabold text-slate-800">Roz Ki Analytics Report</h2>
+                    <p class="text-xs text-slate-500 mt-0.5">Daily operational stats & clinic performance</p>
+                </div>
+                <button onclick="downloadReportSummary()" class="bg-slate-800 hover:bg-slate-900 text-white font-bold px-4 py-2 rounded-xl text-xs transition-all flex items-center gap-1.5">
+                    <i class="fa-solid fa-download"></i> Download Monthly Report
+                </button>
+            </div>
+
+            <!-- Key Metrics Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                    <div>
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Aaj Ke Total Mareez</span>
+                        <span class="text-3xl font-extrabold text-slate-800" id="rep-total-patients">54</span>
+                    </div>
+                    <div class="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-xl flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                    <div>
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Average Wait Time</span>
+                        <span class="text-3xl font-extrabold text-clinic-600" id="rep-avg-wait">14m</span>
+                    </div>
+                    <div class="w-12 h-12 bg-clinic-100 text-clinic-700 rounded-xl flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-clock"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                    <div>
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">No-Shows / Absent</span>
+                        <span class="text-3xl font-extrabold text-rose-600" id="rep-noshows">4</span>
+                    </div>
+                    <div class="w-12 h-12 bg-rose-100 text-rose-700 rounded-xl flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-user-slash"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                    <div>
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Online vs Walk-in</span>
+                        <span class="text-xl font-extrabold text-slate-800">32 / 22</span>
+                    </div>
+                    <div class="w-12 h-12 bg-amber-100 text-amber-700 rounded-xl flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-[#0d9488] fa-chart-pie"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 7 Day Comparison Bar Chart Simulation -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+                <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">7 DIN KA COMPARISON (PATIENT COUNT)</h4>
+                
+                <div class="h-48 flex items-end justify-between gap-2 pt-6 px-4 border-b border-slate-100">
+                    <div class="flex-1 flex flex-col items-center gap-2">
+                        <span class="text-[10px] font-bold text-slate-500">42</span>
+                        <div class="w-full bg-slate-200 rounded-t-lg transition-all hover:bg-clinic-500" style="height: 60%;"></div>
+                        <span class="text-xs font-semibold text-slate-600">Som</span>
+                    </div>
+                    <div class="flex-1 flex flex-col items-center gap-2">
+                        <span class="text-[10px] font-bold text-slate-500">48</span>
+                        <div class="w-full bg-slate-200 rounded-t-lg transition-all hover:bg-clinic-500" style="height: 70%;"></div>
+                        <span class="text-xs font-semibold text-slate-600">Mangal</span>
+                    </div>
+                    <div class="flex-1 flex flex-col items-center gap-2">
+                        <span class="text-[10px] font-bold text-slate-500">51</span>
+                        <div class="w-full bg-slate-200 rounded-t-lg transition-all hover:bg-clinic-500" style="height: 80%;"></div>
+                        <span class="text-xs font-semibold text-slate-600">Budh</span>
+                    </div>
+                    <div class="flex-1 flex flex-col items-center gap-2">
+                        <span class="text-[10px] font-bold text-slate-500">39</span>
+                        <div class="w-full bg-slate-200 rounded-t-lg transition-all hover:bg-clinic-500" style="height: 50%;"></div>
+                        <span class="text-xs font-semibold text-slate-600">Guru</span>
+                    </div>
+                    <div class="flex-1 flex flex-col items-center gap-2">
+                        <span class="text-[10px] font-bold text-slate-500">58</span>
+                        <div class="w-full bg-slate-200 rounded-t-lg transition-all hover:bg-clinic-500" style="height: 90%;"></div>
+                        <span class="text-xs font-semibold text-slate-600">Shukr</span>
+                    </div>
+                    <div class="flex-1 flex flex-col items-center gap-2">
+                        <span class="text-[10px] font-bold text-slate-500">62</span>
+                        <div class="w-full bg-slate-200 rounded-t-lg transition-all hover:bg-clinic-500" style="height: 95%;"></div>
+                        <span class="text-xs font-semibold text-slate-600">Shani</span>
+                    </div>
+                    <div class="flex-1 flex flex-col items-center gap-2">
+                        <span class="text-[10px] font-bold text-clinic-600">54</span>
+                        <div class="w-full bg-clinic-600 rounded-t-lg transition-all" style="height: 85%;"></div>
+                        <span class="text-xs font-bold text-clinic-600">Aaj</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SCREEN 11: SETTINGS -->
+        <section id="screen-11" class="screen-view hidden space-y-6 max-w-3xl mx-auto">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                <span class="text-xs uppercase tracking-widest text-clinic-600 font-bold">Screen 11/12 • Malik Settings</span>
+                <h2 class="text-2xl font-extrabold text-slate-800">Clinic Rules & Configuration</h2>
+                <p class="text-xs text-slate-500 mt-0.5">Developer ki zaroorat nahi — set rules anytime</p>
+            </div>
+
+            <form onsubmit="saveClinicSettings(event)" class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-6">
+                <!-- Toggle Online Tokens -->
+                <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+                    <div>
+                        <h4 class="font-bold text-slate-800 text-sm">Online Token Booking</h4>
+                        <p class="text-xs text-slate-500">Allow patients to book tokens remotely via shared link</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="set-online-toggle" checked class="sr-only peer">
+                        <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-clinic-600"></div>
+                    </label>
+                </div>
+
+                <!-- Daily Token Limit -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Roz Ka Token Limit (Daily Max Capacity)</label>
+                    <input type="number" id="set-daily-limit" value="60" min="10" max="200" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-clinic-500 font-bold">
+                    <p class="text-[11px] text-slate-400 mt-1">Token limit poori hone par booking apne aap stop ho jayegi.</p>
+                </div>
+
+                <!-- OPD Timing -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Morning OPD Shift</label>
+                        <input type="text" id="set-opd-morn" value="10:00 AM - 02:00 PM" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Evening OPD Shift</label>
+                        <input type="text" id="set-opd-eve" value="05:00 PM - 09:00 PM" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium">
+                    </div>
+                </div>
+
+                <!-- Manage Doctors -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Doctors List</label>
+                    <div id="settings-doctors-list" class="space-y-2 mb-3">
+                        <!-- Injected -->
+                    </div>
+                    <button type="button" onclick="addNewDoctorPrompt()" class="text-xs text-clinic-600 hover:text-clinic-800 font-bold inline-flex items-center gap-1">
+                        <i class="fa-solid fa-plus-circle"></i> Add New Doctor
+                    </button>
+                </div>
+
+                <button type="submit" class="w-full bg-clinic-600 hover:bg-clinic-700 text-white font-bold py-3.5 px-6 rounded-xl shadow-lg transition-all text-sm uppercase tracking-wider">
+                    SAVE SETTINGS
+                </button>
+            </form>
+        </section>
+
+
+        <!-- ==========================================
+             LOGIN ROLE (SCREEN 12)
+        =========================================== -->
+
+        <!-- SCREEN 12: LOGIN SCREEN -->
+        <section id="screen-12" class="screen-view hidden max-w-md mx-auto">
+            <div class="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden">
+                <div class="bg-slate-900 p-8 text-white text-center">
+                    <div class="w-14 h-14 bg-clinic-500 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg shadow-clinic-500/30">
+                        <i class="fa-solid fa-user-shield text-2xl text-white"></i>
+                    </div>
+                    <span class="text-xs uppercase tracking-widest text-clinic-400 font-bold">Screen 12/12 • Staff Login</span>
+                    <h2 class="text-2xl font-extrabold mt-1">Staff Safe Portal</h2>
+                </div>
+
+                <form onsubmit="handleStaffLogin(event)" class="p-6 space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Mobile Number</label>
+                        <input type="tel" required pattern="[0-9]{10}" placeholder="10-digit staff phone" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-clinic-500 font-medium">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Enter OTP (Demo: 1234)</label>
+                        <input type="password" required maxlength="4" placeholder="••••" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-center tracking-widest font-bold text-lg focus:outline-none focus:ring-2 focus:ring-clinic-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Select Access Role</label>
+                        <select id="login-role-select" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-clinic-500 font-bold text-slate-800">
+                            <option value="reception">Reception Staff</option>
+                            <option value="doctor">Doctor Panel</option>
+                            <option value="malik">Malik / Admin</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="w-full bg-clinic-600 hover:bg-clinic-700 text-white font-bold py-3.5 px-6 rounded-xl shadow-lg transition-all text-sm uppercase tracking-wider">
+                        LOGIN & ACCESS
+                    </button>
+                </form>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- PRINTABLE TOKEN SLIP (NO-PRINT HIDDEN, PRINT ONLY SHOW) -->
+    <div id="print-slip" class="print-only p-8 max-w-xs mx-auto text-center font-mono border border-black">
+        <h2 class="text-xl font-bold uppercase" id="print-clinic-name">AAPKA CLINIC</h2>
+        <p class="text-xs">OPD Walk-in Token</p>
+        <hr class="my-2 border-black">
+        <p class="text-xs">TOKEN NUMBER</p>
+        <h1 class="text-5xl font-black my-2" id="print-token-no">#00</h1>
+        <p class="text-sm font-bold" id="print-patient-name">Patient Name</p>
+        <p class="text-xs" id="print-doctor">Doctor Name</p>
+        <p class="text-[10px] mt-4" id="print-date-time"></p>
+        <p class="text-[9px] mt-2">Kripya apni baari ka intezaar karein.</p>
+    </div>
+
+    <!-- NOTIFICATION TOAST -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-2xl z-50 flex items-center gap-3 transform translate-y-20 opacity-0 transition-all duration-300">
+        <i class="fa-solid fa-circle-check text-clinic-500 text-lg" id="toast-icon"></i>
+        <span class="text-xs font-semibold" id="toast-msg">Action Completed</span>
+    </div>
+
+
+    <!-- JAVASCRIPT APPLICATION LOGIC -->
+    <script>
+        // INITIAL DEFAULT CLINIC STATE
+        const DEFAULT_STATE = {
+            clinicName: "Aapka Health Clinic",
+            onlineBookingEnabled: true,
+            dailyLimit: 60,
+            opdMorn: "10:00 AM - 02:00 PM",
+            opdEve: "05:00 PM - 09:00 PM",
+            doctors: [
+                { id: "doc-1", name: "Dr. Mehta (General OPD)", spec: "General Physician" },
+                { id: "doc-2", name: "Dr. Sharma (Pediatrics)", spec: "Child Specialist" }
+            ],
+            currentTokenNumber: 12,
+            myTokenId: null,
+            tokens: [
+                { id: 10, name: "Ramesh Verma", phone: "9876543210", doctor: "Dr. Mehta (General OPD)", status: "COMPLETED", type: "ONLINE", visits: 4 },
+                { id: 11, name: "Priya Singh", phone: "9823456789", doctor: "Dr. Mehta (General OPD)", status: "COMPLETED", type: "WALKIN", visits: 1 },
+                { id: 12, name: "Sunita Verma", phone: "9811122233", doctor: "Dr. Mehta (General OPD)", status: "SERVING", type: "ONLINE", visits: 3 },
+                { id: 13, name: "Amit Kumar", phone: "9877766655", doctor: "Dr. Mehta (General OPD)", status: "WAITING", type: "WALKIN", visits: 2 },
+                { id: 14, name: "Anil Kapoor", phone: "9988776655", doctor: "Dr. Mehta (General OPD)", status: "WAITING", type: "ONLINE", visits: 1 },
+                { id: 15, name: "Kavita Roy", phone: "9833344455", doctor: "Dr. Sharma (Pediatrics)", status: "ABSENT", type: "ONLINE", visits: 2 },
+                { id: 16, name: "Deepak Chawla", phone: "9844455566", doctor: "Dr. Mehta (General OPD)", status: "WAITING", type: "WALKIN", visits: 1 },
+                { id: 17, name: "Meena Gupta", phone: "9855566677", doctor: "Dr. Mehta (General OPD)", status: "WAITING", type: "ONLINE", visits: 5 },
+                { id: 18, name: "Rahul Sharma", phone: "9876543210", doctor: "Dr. Mehta (General OPD)", status: "WAITING", type: "ONLINE", visits: 3 }
+            ],
+            patientHistories: {
+                "9876543210": [
+                    { date: "12 Sep 2026", diag: "Bukhar & Cough", meds: "Paracetamol 650mg - 5 din\nSyrup Corex 2 tsp" },
+                    { date: "20 Aug 2026", diag: "Follow-up", meds: "Sab theek hai. Dawa band." },
+                    { date: "02 Aug 2026", diag: "Pehli Visit Checkup", meds: "BP Checkup & Multivitamins" }
+                ]
+            }
+        };
+
+        // Load state from LocalStorage or initialize
+        let appState = JSON.parse(localStorage.getItem('clinic_app_state')) || DEFAULT_STATE;
+
+        function saveState() {
+            localStorage.setItem('clinic_app_state', JSON.stringify(appState));
+            renderAllViews();
+        }
+
+        // Active View Tracking
+        let currentRole = 'mareez';
+        let currentScreen = 1;
+
+        // Role definition metadata mapping 12 screens
+        const ROLE_SCREENS = {
+            mareez: [
+                { id: 1, title: "1. Token Booking" },
+                { id: 2, title: "2. Token Confirm" },
+                { id: 3, title: "3. Live Queue" }
+            ],
+            reception: [
+                { id: 4, title: "4. Aaj Ki List" },
+                { id: 5, title: "5. Walk-in Entry" },
+                { id: 6, title: "6. Patient Search" }
+            ],
+            doctor: [
+                { id: 7, title: "7. Next Patient" },
+                { id: 8, title: "8. Patient History" }
+            ],
+            tv: [
+                { id: 9, title: "9. TV Display" }
+            ],
+            malik: [
+                { id: 10, title: "10. Roz Ki Report" },
+                { id: 11, title: "11. Settings" }
+            ],
+            login: [
+                { id: 12, title: "12. Staff Login" }
+            ]
+        };
+
+        // DOM Initialization
+        window.onload = function() {
+            // Set date strings
+            const today = new Date();
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+
+            document.getElementById('lbl-today-date').innerText = today.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+            document.getElementById('lbl-tomorrow-date').innerText = tomorrow.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+
+            switchRole('mareez', 1);
+            renderAllViews();
+
+            // Auto clock for TV
+            setInterval(() => {
+                const now = new Date();
+                const clockEl = document.getElementById('tv-clock');
+                if (clockEl) clockEl.innerText = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            }, 1000);
+        };
+
+        // NAVIGATION & ROLE SWITCHING LOGIC
+        function switchRole(role, targetScreen) {
+            currentRole = role;
+            currentScreen = targetScreen || ROLE_SCREENS[role][0].id;
+
+            // Highlight nav button
+            document.querySelectorAll('.role-nav-btn').forEach(btn => {
+                btn.classList.remove('bg-clinic-600', 'text-white');
+                btn.classList.add('text-slate-300');
+            });
+            const activeBtn = document.getElementById(`nav-btn-${role}`);
+            if (activeBtn) {
+                activeBtn.classList.add('bg-clinic-600', 'text-white');
+                activeBtn.classList.remove('text-slate-300');
+            }
+
+            // Update role indicator
+            document.getElementById('role-title').innerText = role.toUpperCase();
+
+            // Render subnav buttons for role screens
+            const subnav = document.getElementById('subnav-screens');
+            subnav.innerHTML = '';
+            ROLE_SCREENS[role].forEach(sc => {
+                const button = document.createElement('button');
+                button.className = `px-3 py-1 rounded-lg text-xs font-bold transition-all ${sc.id === currentScreen ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`;
+                button.innerText = sc.title;
+                button.onclick = () => showScreen(sc.id);
+                subnav.appendChild(button);
+            });
+
+            showScreen(currentScreen);
+        }
+
+        function showScreen(screenNum) {
+            currentScreen = screenNum;
+            document.querySelectorAll('.screen-view').forEach(s => s.classList.add('hidden'));
+
+            const target = document.getElementById(`screen-${screenNum}`);
+            if (target) target.classList.remove('hidden');
+
+            // Re-render subnav tab active state
+            const subnavBtns = document.getElementById('subnav-screens').children;
+            const roleScreens = ROLE_SCREENS[currentRole];
+            for (let i = 0; i < subnavBtns.length; i++) {
+                if (roleScreens[i] && roleScreens[i].id === screenNum) {
+                    subnavBtns[i].className = 'px-3 py-1 rounded-lg text-xs font-bold transition-all bg-slate-800 text-white';
+                } else {
+                    subnavBtns[i].className = 'px-3 py-1 rounded-lg text-xs font-bold transition-all bg-slate-100 text-slate-600 hover:bg-slate-200';
+                }
+            }
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        }
+
+        // UNIVERSAL VIEW RENDERER
+        function renderAllViews() {
+            // Screen 1: Booking Doctors
+            const docSelects = [document.getElementById('book-doctor'), document.getElementById('walkin-doctor'), document.getElementById('rec-doctor-filter')];
+            docSelects.forEach(select => {
+                if (!select) return;
+                const currentVal = select.value;
+                select.innerHTML = select.id === 'rec-doctor-filter' ? '<option value="ALL">All Doctors</option>' : '';
+                appState.doctors.forEach(doc => {
+                    const opt = document.createElement('option');
+                    opt.value = doc.name;
+                    opt.innerText = `${doc.name} - ${doc.spec}`;
+                    select.appendChild(opt);
+                });
+                if (currentVal) select.value = currentVal;
+            });
+
+            // Clinic details
+            document.getElementById('b-clinic-name').innerText = appState.clinicName;
+            document.getElementById('b-opd-timings').innerText = `OPD: ${appState.opdMorn} | ${appState.opdEve}`;
+            document.getElementById('capacity-count').innerText = `${appState.tokens.length} / ${appState.dailyLimit}`;
+
+            // Screen 2 & 3: Live Queue Tokens
+            const servingToken = appState.tokens.find(t => t.status === 'SERVING') || { id: appState.currentTokenNumber, name: "None" };
+            const userToken = appState.tokens.find(t => t.id === appState.myTokenId) || appState.tokens[appState.tokens.length - 1];
+
+            document.getElementById('live-current-token').innerText = `#${servingToken.id}`;
+            document.getElementById('live-current-patient').innerText = `Patient: ${servingToken.name}`;
+
+            if (userToken) {
+                document.getElementById('confirm-token-no').innerText = `#${userToken.id}`;
+                document.getElementById('confirm-patient-name').innerText = `Mareez: ${userToken.name}`;
+                document.getElementById('confirm-doctor').innerText = userToken.doctor;
+
+                document.getElementById('live-user-token').innerText = `#${userToken.id}`;
+                const ahead = appState.tokens.filter(t => t.id < userToken.id && (t.status === 'WAITING' || t.status === 'SERVING')).length;
+                document.getElementById('live-ahead-count').innerText = `${ahead} Log`;
+                document.getElementById('live-wait-time').innerText = `~${ahead * 5} Min`;
+            }
+
+            // Screen 4: Today's List
+            renderTodayList();
+
+            // Screen 5: Next Walkin Num
+            document.getElementById('walkin-next-num').innerText = `#${appState.tokens.length + 10}`;
+
+            // Screen 6: Search
+            searchPatientRecords();
+
+            // Screen 7 & 8: Doctor Console
+            document.getElementById('doc-current-token').innerText = `#${servingToken.id}`;
+            document.getElementById('doc-current-name').innerText = servingToken.name;
+            document.getElementById('doc-current-visit-meta').innerText = `${servingToken.visits || 1}st Visit • OPD Patient`;
+
+            // Next 3 patients
+            const waitingList = appState.tokens.filter(t => t.status === 'WAITING');
+            document.getElementById('doc-waiting-count').innerText = waitingList.length;
+            const upcomingContainer = document.getElementById('doc-upcoming-list');
+            upcomingContainer.innerHTML = '';
+            waitingList.slice(0, 3).forEach(t => {
+                const div = document.createElement('div');
+                div.className = "bg-slate-50 p-3 rounded-xl border border-slate-200 flex items-center justify-between";
+                div.innerHTML = `
+                    <div>
+                        <span class="font-extrabold text-clinic-600 text-base">#${t.id}</span>
+                        <span class="font-bold text-slate-800 text-xs ml-2">${t.name}</span>
+                    </div>
+                    <span class="text-[10px] bg-slate-200 font-bold px-2 py-0.5 rounded">${t.type}</span>
+                `;
+                upcomingContainer.appendChild(div);
+            });
+
+            // Doctor Rx info
+            document.getElementById('rx-patient-name').innerText = servingToken.name;
+            document.getElementById('rx-patient-phone').innerText = `+91 ${servingToken.phone || '9876543210'}`;
+            document.getElementById('rx-total-visits').innerText = servingToken.visits || 1;
+            renderPatientHistoryTimeline(servingToken.phone);
+
+            // Screen 9: TV Display
+            document.getElementById('tv-clinic-name').innerText = appState.clinicName.toUpperCase();
+            document.getElementById('tv-current-token').innerText = `#${servingToken.id}`;
+            document.getElementById('tv-current-patient').innerText = `Mareez: ${servingToken.name}`;
+            const tvNextContainer = document.getElementById('tv-next-list');
+            tvNextContainer.innerHTML = '';
+            waitingList.slice(0, 3).forEach(t => {
+                const div = document.createElement('div');
+                div.className = "bg-slate-700/60 p-4 rounded-2xl flex items-center justify-between border border-slate-600/50";
+                div.innerHTML = `
+                    <span class="text-xs font-bold text-slate-300 uppercase">Agle</span>
+                    <span class="text-3xl font-black text-emerald-400">#${t.id}</span>
+                `;
+                tvNextContainer.appendChild(div);
+            });
+
+            // Screen 10: Reports
+            document.getElementById('rep-total-patients').innerText = appState.tokens.length;
+
+            // Screen 11: Settings
+            document.getElementById('set-online-toggle').checked = appState.onlineBookingEnabled;
+            document.getElementById('set-daily-limit').value = appState.dailyLimit;
+            document.getElementById('set-opd-morn').value = appState.opdMorn;
+            document.getElementById('set-opd-eve').value = appState.opdEve;
+            renderDoctorsListSettings();
+        }
+
+        // SCREEN 1 ACTIONS: BOOKING
+        function handleTokenBooking(e) {
+            e.preventDefault();
+            if (appState.tokens.length >= appState.dailyLimit) {
+                showToast("Daily Token Limit Reached!", "error");
+                return;
+            }
+
+            const name = document.getElementById('book-name').value;
+            const phone = document.getElementById('book-phone').value;
+            const doctor = document.getElementById('book-doctor').value;
+
+            const newToken = {
+                id: appState.tokens.length + 10,
+                name: name,
+                phone: phone,
+                doctor: doctor,
+                status: 'WAITING',
+                type: 'ONLINE',
+                visits: 1
+            };
+
+            appState.tokens.push(newToken);
+            appState.myTokenId = newToken.id;
+            saveState();
+
+            showToast(`Token #${newToken.id} Booked Successfully!`);
+            switchRole('mareez', 2);
+        }
+
+        function copyClinicShareLink() {
+            navigator.clipboard.writeText(window.location.href);
+            showToast("Booking Link Copied to Clipboard!");
+        }
+
+        function goToLiveQueueScreen() {
+            switchRole('mareez', 3);
+        }
+
+        function cancelMyToken() {
+            if (appState.myTokenId) {
+                appState.tokens = appState.tokens.filter(t => t.id !== appState.myTokenId);
+                appState.myTokenId = null;
+                saveState();
+                showToast("Token Cancelled");
+                switchRole('mareez', 1);
+            }
+        }
+
+        // SCREEN 4: TODAY'S LIST
+        function renderTodayList() {
+            const tbody = document.getElementById('today-list-tbody');
+            if (!tbody) return;
+
+            const search = (document.getElementById('rec-search-input')?.value || '').toLowerCase();
+            const docFilter = document.getElementById('rec-doctor-filter')?.value || 'ALL';
+
+            tbody.innerHTML = '';
+            appState.tokens.forEach(t => {
+                if (docFilter !== 'ALL' && t.doctor !== docFilter) return;
+                if (search && !t.name.toLowerCase().includes(search) && !t.phone.includes(search) && !t.id.toString().includes(search)) return;
+
+                let badgeColor = "bg-amber-100 text-amber-800";
+                if (t.status === 'SERVING') badgeColor = "bg-emerald-500 text-white animate-pulse";
+                if (t.status === 'COMPLETED') badgeColor = "bg-slate-200 text-slate-700";
+                if (t.status === 'ABSENT') badgeColor = "bg-rose-100 text-rose-700";
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition-all border-b border-slate-100";
+                tr.innerHTML = `
+                    <td class="p-4 font-black text-clinic-600 text-base">#${t.id}</td>
+                    <td class="p-4">
+                        <div class="font-bold text-slate-800">${t.name}</div>
+                        <div class="text-xs text-slate-400">+91 ${t.phone}</div>
+                    </td>
+                    <td class="p-4 text-xs font-semibold text-slate-600">${t.doctor}</td>
+                    <td class="p-4"><span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-slate-100">${t.type}</span></td>
+                    <td class="p-4"><span class="text-xs font-bold px-2.5 py-1 rounded-full ${badgeColor}">${t.status}</span></td>
+                    <td class="p-4 text-right">
+                        <button onclick="markTokenStatus(${t.id}, 'SERVING')" class="bg-clinic-100 text-clinic-700 hover:bg-clinic-200 text-xs font-bold px-2.5 py-1 rounded-lg">Call</button>
+                        <button onclick="markTokenStatus(${t.id}, 'ABSENT')" class="bg-rose-50 text-rose-600 hover:bg-rose-100 text-xs font-bold px-2.5 py-1 rounded-lg ml-1">Absent</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            document.getElementById('today-total-badge').innerText = `AAJ: ${appState.tokens.length} MAREEZ`;
+        }
+
+        function filterTodayList() {
+            renderTodayList();
+        }
+
+        function markTokenStatus(id, status) {
+            const token = appState.tokens.find(t => t.id === id);
+            if (token) {
+                if (status === 'SERVING') {
+                    appState.tokens.forEach(t => { if (t.status === 'SERVING') t.status = 'COMPLETED'; });
+                }
+                token.status = status;
+                saveState();
+                showToast(`Token #${id} marked as ${status}`);
+            }
+        }
+
+        // SCREEN 5: WALK-IN ENTRY
+        function handleWalkInEntry(e) {
+            e.preventDefault();
+            const name = document.getElementById('walkin-name').value;
+            const phone = document.getElementById('walkin-phone').value;
+            const doctor = document.getElementById('walkin-doctor').value;
+
+            const newToken = {
+                id: appState.tokens.length + 10,
+                name: name,
+                phone: phone,
+                doctor: doctor,
+                status: 'WAITING',
+                type: 'WALKIN',
+                visits: 1
+            };
+
+            appState.tokens.push(newToken);
+            saveState();
+
+            if (document.getElementById('walkin-opt-print').checked) {
+                printSlip(newToken);
+            } else {
+                showToast(`Walk-in Token #${newToken.id} Created!`);
+                switchRole('reception', 4);
+            }
+        }
+
+        function printSlip(token) {
+            document.getElementById('print-clinic-name').innerText = appState.clinicName;
+            document.getElementById('print-token-no').innerText = `#${token.id}`;
+            document.getElementById('print-patient-name').innerText = token.name;
+            document.getElementById('print-doctor').innerText = token.doctor;
+            document.getElementById('print-date-time').innerText = new Date().toLocaleString();
+            window.print();
+            switchRole('reception', 4);
+        }
+
+        // SCREEN 6: PATIENT SEARCH
+        function searchPatientRecords() {
+            const query = (document.getElementById('patient-search-query')?.value || '').toLowerCase();
+            const container = document.getElementById('patient-search-results');
+            if (!container) return;
+
+            container.innerHTML = '';
+            // Unique patients by phone
+            const patientsMap = {};
+            appState.tokens.forEach(t => {
+                if (!patientsMap[t.phone]) {
+                    patientsMap[t.phone] = { name: t.name, phone: t.phone, visits: t.visits || 1, lastVisit: "12 Sep 2026" };
+                }
+            });
+
+            Object.values(patientsMap).forEach(p => {
+                if (query && !p.name.toLowerCase().includes(query) && !p.phone.includes(query)) return;
+
+                const card = document.createElement('div');
+                card.className = "bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between";
+                card.innerHTML = `
+                    <div>
+                        <h4 class="font-bold text-slate-800 text-base">${p.name}</h4>
+                        <p class="text-xs text-slate-500">+91 ${p.phone}</p>
+                        <div class="flex items-center gap-2 mt-2 text-[11px] font-semibold text-clinic-600">
+                            <span class="bg-clinic-50 px-2 py-0.5 rounded border border-clinic-200">${p.visits} Visits</span>
+                            <span>Last: ${p.lastVisit}</span>
+                        </div>
+                    </div>
+                    <button onclick="viewHistoryForPhone('${p.phone}')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold p-2.5 rounded-xl text-xs">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function viewHistoryForPhone(phone) {
+            const token = appState.tokens.find(t => t.phone === phone);
+            if (token) {
+                token.status = 'SERVING';
+                saveState();
+                switchRole('doctor', 8);
+            }
+        }
+
+        // SCREEN 7: DOCTOR ACTIONS
+        function doctorCallNext() {
+            const currentServing = appState.tokens.find(t => t.status === 'SERVING');
+            if (currentServing) {
+                currentServing.status = 'COMPLETED';
+            }
+
+            const nextWaiting = appState.tokens.find(t => t.status === 'WAITING');
+            if (nextWaiting) {
+                nextWaiting.status = 'SERVING';
+                appState.currentTokenNumber = nextWaiting.id;
+                saveState();
+                showToast(`Token #${nextWaiting.id} Called!`);
+                playTVChimeAnnouncement();
+            } else {
+                showToast("No more waiting patients in queue!");
+            }
+        }
+
+        function doctorAction(action) {
+            const currentServing = appState.tokens.find(t => t.status === 'SERVING');
+            if (currentServing) {
+                currentServing.status = action === 'hold' ? 'HOLD' : 'ABSENT';
+                saveState();
+                showToast(`Patient #${currentServing.id} marked as ${action.toUpperCase()}`);
+                doctorCallNext();
+            }
+        }
+
+        // SCREEN 8: RX & HISTORY
+        function renderPatientHistoryTimeline(phone) {
+            const container = document.getElementById('rx-history-timeline');
+            if (!container) return;
+
+            const histories = appState.patientHistories[phone] || [
+                { date: "12 Sep 2026", diag: "General OPD Checkup", meds: "Routine Health Checkup" }
+            ];
+
+            container.innerHTML = '';
+            histories.forEach(h => {
+                const div = document.createElement('div');
+                div.className = "relative";
+                div.innerHTML = `
+                    <div class="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-clinic-500 border-2 border-white"></div>
+                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                        <span class="text-[10px] font-bold text-clinic-600 uppercase tracking-wider block">${h.date}</span>
+                        <h4 class="font-bold text-slate-800 text-sm my-1">${h.diag}</h4>
+                        <pre class="text-xs font-mono text-slate-600 bg-white p-2.5 rounded-xl border border-slate-100 whitespace-pre-wrap">${h.meds}</pre>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function savePatientVisitNote() {
+            const servingToken = appState.tokens.find(t => t.status === 'SERVING') || appState.tokens[0];
+            const phone = servingToken.phone;
+            const diag = document.getElementById('new-rx-diag').value;
+            const meds = document.getElementById('new-rx-meds').value;
+
+            if (!diag || !meds) {
+                showToast("Please fill diagnosis & prescription!", "error");
+                return;
+            }
+
+            if (!appState.patientHistories[phone]) appState.patientHistories[phone] = [];
+            appState.patientHistories[phone].unshift({
+                date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+                diag: diag,
+                meds: meds
+            });
+
+            saveState();
+            document.getElementById('new-rx-diag').value = '';
+            document.getElementById('new-rx-meds').value = '';
+            showToast("Visit Record Saved!");
+        }
+
+        // SCREEN 9: TV CHIME
+        function playTVChimeAnnouncement() {
+            const servingToken = appState.tokens.find(t => t.status === 'SERVING');
+            const tokenNum = servingToken ? servingToken.id : appState.currentTokenNumber;
+
+            if ('speechSynthesis' in window) {
+                const msg = new SpeechSynthesisUtterance(`Token number ${tokenNum}, please proceed to doctor cabin.`);
+                msg.rate = 0.9;
+                window.speechSynthesis.speak(msg);
+            }
+            showToast(`Voice Call Announcement: Token #${tokenNum}`);
+        }
+
+        // SCREEN 10: REPORT DOWNLOAD
+        function downloadReportSummary() {
+            const reportText = `CLINIC DAILY REPORT SUMMARY\nDate: ${new Date().toLocaleDateString()}\nTotal Patients: ${appState.tokens.length}\nAvg Wait Time: 14 mins`;
+            const blob = new Blob([reportText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Clinic_Report_${new Date().toISOString().slice(0,10)}.txt`;
+            a.click();
+            showToast("Report Downloaded!");
+        }
+
+        // SCREEN 11: SETTINGS
+        function renderDoctorsListSettings() {
+            const container = document.getElementById('settings-doctors-list');
+            if (!container) return;
+            container.innerHTML = '';
+
+            appState.doctors.forEach((d, idx) => {
+                const div = document.createElement('div');
+                div.className = "flex items-center justify-between bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-xs";
+                div.innerHTML = `
+                    <span class="font-bold text-slate-800">${d.name} (${d.spec})</span>
+                    <button type="button" onclick="removeDoctor(${idx})" class="text-rose-600 font-bold hover:text-rose-800">Remove</button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function addNewDoctorPrompt() {
+            const name = prompt("Enter Doctor Name:");
+            const spec = prompt("Enter Department / Specialty:");
+            if (name && spec) {
+                appState.doctors.push({ id: `doc-${Date.now()}`, name: name, spec: spec });
+                saveState();
+            }
+        }
+
+        function removeDoctor(idx) {
+            appState.doctors.splice(idx, 1);
+            saveState();
+        }
+
+        function saveClinicSettings(e) {
+            e.preventDefault();
+            appState.onlineBookingEnabled = document.getElementById('set-online-toggle').checked;
+            appState.dailyLimit = parseInt(document.getElementById('set-daily-limit').value) || 60;
+            appState.opdMorn = document.getElementById('set-opd-morn').value;
+            appState.opdEve = document.getElementById('set-opd-eve').value;
+
+            saveState();
+            showToast("Clinic Settings Saved!");
+        }
+
+        // SCREEN 12: STAFF LOGIN
+        function handleStaffLogin(e) {
+            e.preventDefault();
+            const role = document.getElementById('login-role-select').value;
+            showToast(`Logged in as ${role.toUpperCase()} Staff`);
+            switchRole(role, ROLE_SCREENS[role][0].id);
+        }
+
+        // TOAST NOTIFICATION UTILITY
+        function showToast(message, type = "success") {
+            const toast = document.getElementById('toast');
+            const msgEl = document.getElementById('toast-msg');
+            const iconEl = document.getElementById('toast-icon');
+
+            msgEl.innerText = message;
+            if (type === "error") {
+                iconEl.className = "fa-solid fa-circle-exclamation text-rose-500 text-lg";
+            } else {
+                iconEl.className = "fa-solid fa-circle-check text-clinic-500 text-lg";
+            }
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
